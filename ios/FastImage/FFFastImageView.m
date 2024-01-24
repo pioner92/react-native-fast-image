@@ -71,6 +71,15 @@
     }
 }
 
+- (void) setHexagonMaskEnabled: (BOOL)hexagonMaskEnabled {
+    if (hexagonMaskEnabled != nil) {
+        _hexagonMaskEnabled = hexagonMaskEnabled;
+        if (super.image) {
+            super.image = [self createRoundedHexagonMaskForImage: super.image];
+        }
+    }
+}
+
 - (UIImage*) makeImage: (UIImage*)image withTint: (UIColor*)color {
     UIImage* newImage = [image imageWithRenderingMode: UIImageRenderingModeAlwaysTemplate];
     UIGraphicsBeginImageContextWithOptions(image.size, NO, newImage.scale);
@@ -84,9 +93,52 @@
 - (void) setImage: (UIImage*)image {
     if (self.imageColor != nil) {
         super.image = [self makeImage: image withTint: self.imageColor];
-    } else {
+    } else if(self.hexagonMaskEnabled) {
+        super.image = [self createRoundedHexagonMaskForImage: image];
+    }
+    else {
         super.image = image;
     }
+}
+
+
+- (UIImage *)createRoundedHexagonMaskForImage:(UIImage *)image {
+		// Создаем новый контекст с размерами изображения
+	UIGraphicsBeginImageContextWithOptions(image.size, NO, 0.0);
+	CGContextRef context = UIGraphicsGetCurrentContext();
+
+
+		// Рисуем шестиугольник
+	CGFloat centerX = image.size.width / 2;
+	CGFloat centerY = image.size.height / 2;
+	CGFloat radius = MIN(image.size.width, image.size.height) / 2;
+	CGFloat angle = 2.0 * M_PI / 6.0; // 360 degrees divided by number of sides (6 for hexagon)
+	CGFloat cornerRadius = self.superview.bounds.size.width; // Adjust as needed
+
+	CGContextMoveToPoint(context, centerX + radius * sinf(0 * angle), centerY - radius * cosf(0 * angle));
+
+	for (int i = 1; i <= 7; ++i) {
+		CGFloat x1 = centerX + radius * sinf((i - 1) * angle);
+		CGFloat y1 = centerY - radius * cosf((i - 1) * angle);
+		CGFloat x2 = centerX + radius * sinf(i * angle);
+		CGFloat y2 = centerY - radius * cosf(i * angle);
+		CGContextAddArcToPoint(context, x1, y1, x2, y2, cornerRadius);
+	}
+
+
+		// Обрезаем изображение по шестиугольнику
+	CGContextClip(context);
+
+		// Рисуем изображение
+	[image drawInRect:CGRectMake(0, 0, image.size.width, image.size.height)];
+
+		// Получаем новое изображение
+	UIImage *maskedImage = UIGraphicsGetImageFromCurrentImageContext();
+
+		// Завершаем контекст
+	UIGraphicsEndImageContext();
+
+	return maskedImage;
 }
 
 - (void) sendOnLoad: (UIImage*)image {

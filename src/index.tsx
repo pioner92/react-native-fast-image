@@ -128,6 +128,8 @@ export interface FastImageProps extends AccessibilityProps, ViewProps {
      * Render children within the image.
      */
     children?: React.ReactNode
+
+    hexagonMaskEnabledIOS?: boolean
 }
 
 const resolveDefaultSource = (
@@ -165,6 +167,7 @@ function FastImageBase({
     style,
     fallback,
     children,
+    hexagonMaskEnabledIOS,
     // eslint-disable-next-line no-shadow
     resizeMode = 'cover',
     forwardedRef,
@@ -211,6 +214,7 @@ function FastImageBase({
                 onFastImageError={onError}
                 onFastImageLoadEnd={onLoadEnd}
                 resizeMode={resizeMode}
+                hexagonMaskEnabled={hexagonMaskEnabledIOS}
             />
             {children}
         </View>
